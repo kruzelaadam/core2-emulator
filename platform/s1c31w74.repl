@@ -1,0 +1,41 @@
+// Epson S1C31W74 (die mark C31W74201). Memory map is figure 4.1.1 of the
+// technical manual rev 1.1. The Python peripheral path is absolute because
+// renode-test does not use the repo as its process cwd.
+
+nvic: IRQControllers.NVIC @ sysbus 0xE000E000
+    priorityMask: 0xC0
+    systickFrequency: 8000000
+    IRQ -> cpu@0
+
+cpu: CPU.CortexM @ sysbus
+    cpuType: "cortex-m0+"
+    nvic: nvic
+    PerformanceInMips: 8
+
+// IRQ 0..22 are DMA, SVD0, port, CLG, RTC, T16, UART, SPIA, I2C, T16B,
+// QSPI, REMC, LCD, USB, SVD1, sound, RFC. WDT2 is NMI, not an IRQ line.
+// Upstream NVIC has far more than 32 inputs; Epson only wires 0..22.
+
+flash: Memory.MappedMemory @ sysbus 0x00000000
+    size: 0x00080000
+
+xip: Memory.MappedMemory @ sysbus 0x00080000
+    size: 0x00100000
+
+sram: Memory.MappedMemory @ sysbus 0x20000000
+    size: 0x00020000
+
+displayRam: Memory.MappedMemory @ sysbus 0x20200000
+    size: 0x00000400
+
+usbRam: Memory.MappedMemory @ sysbus 0x20400000
+    size: 0x00000400
+
+// 8 KiB of 16-bit registers plus 4 KiB of 32-bit registers.
+// Script path is absolute: renode-test starts Renode with cwd = the
+// Renode install, so a repo-relative filename does not resolve. The PHP
+// console rewrites this line to the same runtime copy.
+s1c31: Python.PythonPeripheral @ sysbus 0x40000000
+    size: 0x3000
+    initable: true
+    filename: "C:/Users/kruze/AppData/Local/s1c31-tools/runtime/s1c31w74.py"

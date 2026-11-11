@@ -1,0 +1,4 @@
+# Copy to local.properties. Leave empty unless you already have your own images.
+# This repository does not ship firmware.
+corium.dir=
+corium.images=

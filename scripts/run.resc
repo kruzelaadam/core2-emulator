@@ -1,0 +1,30 @@
+# From the repo root:  renode scripts/run.resc
+# @ paths are relative to this file. The peripheral script path inside the
+# repl is absolute (runtime copy), so the process cwd does not matter.
+
+mach add "s1c31w74"
+machine LoadPlatformDescription @../platform/s1c31w74.repl
+sysbus LoadELF @../fw/happy.elf
+
+start
+
+# Host-side poll. A bkpt halts the CPU, so virtual-time RunFor would stall.
+python """
+import time
+def num(v):
+    if hasattr(v, 'RawValue'):
+        v = v.RawValue
+    return int(v)
+magic = 0
+bus = monitor.Machine.SystemBus
+for _ in range(50):
+    magic = num(bus.ReadDoubleWord(0x20000000))
+    if magic != 0:
+        break
+    time.sleep(0.1)
+cpu = monitor.Machine['sysbus.cpu']
+print('PC 0x%08X' % num(cpu.PC))
+print('MAGIC 0x%08X' % magic)
+print('P0DAT 0x%04X' % num(bus.ReadWord(0x40000200)))
+print('DISP 0x%04X' % num(bus.ReadWord(0x20200000)))
+"""
